@@ -4,10 +4,12 @@ import { apiDetails } from "@movie/api-client";
 import { apiConfig } from "@/lib/api";
 import { tmdbImageUrl } from "@movie/tmdb";
 import { Card } from "@/components/ui";
+export const dynamic = "force-dynamic";
 
-export default async function MovieDetailsPage({ params }: { params: { id: string } }) {
+export default async function MovieDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const cfg = apiConfig();
-  const id = Number(params.id);
+  const { id: movieId } = await params;
+  const id = Number(movieId);
   const m: any = await apiDetails(cfg, id);
   const poster = tmdbImageUrl(m.poster_path ?? null, "w500");
   const backdrop = tmdbImageUrl(m.backdrop_path ?? null, "original");

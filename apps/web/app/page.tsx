@@ -3,6 +3,7 @@ import { MovieCard } from "@/components/MovieCard";
 import { Card } from "@/components/ui";
 import { apiConfig } from "@/lib/api";
 import { apiPopular } from "@movie/api-client";
+export const dynamic = "force-dynamic";
 
 export default async function Page() {
   const cfg = apiConfig();
