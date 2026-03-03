@@ -112,7 +112,7 @@ app.post("/movies/list", async (req, reply) => {
   const { type } = req.body as any;
   if (type !== "LIKE" && type !== "WATCHLIST") return reply.code(400).send({ error: "Bad request" });
   const actions = await prisma.movieAction.findMany({ where: { userId: user.id, type }, orderBy: { createdAt: "desc" }, take: 300 });
-  return { movieIds: actions.map((a) => a.movieId) };
+  return { movieIds: actions.map((a: { movieId: number }) => a.movieId) };
 });
 
 app.get("/tmdb/popular", async () => tmdbPopular({ apiKey: process.env.TMDB_API_KEY ?? "" }, 1));
