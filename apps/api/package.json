@@ -1,0 +1,29 @@
+{
+  "name": "@movie/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "prisma:migrate": "prisma migrate dev --name init",
+    "prisma:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^9.3.1",
+    "@fastify/cors": "^10.0.1",
+    "@prisma/client": "^5.20.0",
+    "fastify": "^5.2.1",
+    "jose": "^5.9.6",
+    "siwe": "^2.3.2",
+    "@movie/tmdb": "workspace:*",
+    "@movie/types": "workspace:*"
+  },
+  "devDependencies": {
+    "prisma": "^5.20.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "@types/node": "^20.16.11"
+  }
+}

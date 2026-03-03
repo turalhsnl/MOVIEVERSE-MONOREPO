@@ -1,0 +1,1 @@
+import 'dotenv/config';export default ({config}:any)=>({...config,name:'MovieVerse',slug:'movieverse',scheme:'movieverse',extra:{EXPO_PUBLIC_API_BASE_URL:process.env.EXPO_PUBLIC_API_BASE_URL??'http://localhost:4000'}});
