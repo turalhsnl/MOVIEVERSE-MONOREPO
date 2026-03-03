@@ -4,6 +4,7 @@ import { apiDetails } from "@movie/api-client";
 import { apiConfig } from "@/lib/api";
 import { tmdbImageUrl } from "@movie/tmdb";
 import { Card } from "@/components/ui";
+export const dynamic = "force-dynamic";
 
 export const dynamic = "force-dynamic";
 
