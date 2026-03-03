@@ -6,11 +6,33 @@ import { tmdbImageUrl } from "@movie/tmdb";
 import { Card } from "@/components/ui";
 export const dynamic = "force-dynamic";
 
+export const dynamic = "force-dynamic";
+
 export default async function MovieDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const cfg = apiConfig();
   const { id: movieId } = await params;
   const id = Number(movieId);
-  const m: any = await apiDetails(cfg, id);
+
+  let m: any = null;
+  let error: string | null = null;
+
+  try {
+    m = await apiDetails(cfg, id);
+  } catch (err) {
+    error = err instanceof Error ? err.message : "Failed to load movie";
+  }
+
+  if (error || !m) {
+    return (
+      <main className="mx-auto max-w-6xl p-6">
+        <Link href="/" className="text-sm opacity-80 hover:opacity-100">← Back</Link>
+        <Card className="mt-4">
+          <p className="text-sm opacity-90">Could not load this movie: {error ?? "Unknown error"}. Check that the API is running at {cfg.baseUrl}.</p>
+        </Card>
+      </main>
+    );
+  }
+
   const poster = tmdbImageUrl(m.poster_path ?? null, "w500");
   const backdrop = tmdbImageUrl(m.backdrop_path ?? null, "original");
 
