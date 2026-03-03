@@ -4,9 +4,20 @@ import { Card } from "@/components/ui";
 import { apiConfig } from "@/lib/api";
 import { apiPopular } from "@movie/api-client";
 
+export const dynamic = "force-dynamic";
+
 export default async function Page() {
   const cfg = apiConfig();
-  const data = await apiPopular(cfg);
+
+  let data: Awaited<ReturnType<typeof apiPopular>> | null = null;
+  let error: string | null = null;
+
+  try {
+    data = await apiPopular(cfg);
+  } catch (err) {
+    error = err instanceof Error ? err.message : "Failed to load movies";
+  }
+
   return (
     <main className="mx-auto max-w-6xl p-6">
       <Card className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -17,9 +28,15 @@ export default async function Page() {
         <div className="w-full md:w-[360px]"><MetaMaskAuth /></div>
       </Card>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        {data.results.map((m) => <MovieCard key={m.id} m={m} />)}
-      </div>
+      {error ? (
+        <Card>
+          <p className="text-sm opacity-90">Could not load movies right now: {error}. Check that the API is running at {cfg.baseUrl}.</p>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          {data?.results.map((m) => <MovieCard key={m.id} m={m} />)}
+        </div>
+      )}
     </main>
   );
 }

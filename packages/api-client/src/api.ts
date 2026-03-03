@@ -3,9 +3,23 @@ import type { ActionType, Flags, TmdbMovie, TmdbPagedResponse, UserDTO } from "@
 export type ApiConfig = { baseUrl: string };
 
 async function parse<T>(resPromise: Promise<Response>): Promise<T> {
-  const res = await resPromise;
+  let res: Response;
+  try {
+    res = await resPromise;
+  } catch {
+    throw new Error("Unable to reach API server");
+  }
+
   const txt = await res.text();
-  const json = txt ? JSON.parse(txt) : null;
+  let json: any = null;
+  if (txt) {
+    try {
+      json = JSON.parse(txt);
+    } catch {
+      json = null;
+    }
+  }
+
   if (!res.ok) throw new Error(json?.error ?? `HTTP ${res.status}`);
   return json as T;
 }
