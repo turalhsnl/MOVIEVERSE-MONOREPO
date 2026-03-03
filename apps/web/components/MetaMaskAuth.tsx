@@ -1,24 +1,44 @@
 "use client";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BrowserProvider } from "ethers";
 import { SiweMessage } from "siwe";
 import { apiConfig } from "@/lib/api";
 import { apiMe, apiNonce, apiSetProfile, apiVerify } from "@movie/api-client";
 import { Button, Card, Input } from "./ui";
+
 type EthProvider = { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> };
 declare global { interface Window { ethereum?: EthProvider } }
 
-export function MetaMaskAuth() {
+type MeState = { authed: boolean; user: { walletAddress: string } | null };
+
+export function MetaMaskAuth({ onAuthed }: { onAuthed?: () => void }) {
   const cfg = useMemo(() => apiConfig(), []);
-  const has = useMemo(() => typeof window !== "undefined" && !!window.ethereum, []);
-  const [status, setStatus] = useState(has ? "Not connected" : "MetaMask not found");
-  const [me, setMe] = useState<any>({ authed: false, user: null });
+  const [has, setHas] = useState(false);
+  const [status, setStatus] = useState("Checking wallet...");
+  const [me, setMe] = useState<MeState>({ authed: false, user: null });
   const [needsProfile, setNeedsProfile] = useState(false);
   const [displayName, setDisplayName] = useState("");
 
+  useEffect(() => {
+    const hasWallet = typeof window !== "undefined" && !!window.ethereum;
+    setHas(hasWallet);
+    setStatus(hasWallet ? "Not connected" : "MetaMask not found");
+  }, []);
+
   const refresh = useCallback(async () => {
-    try { setMe(await apiMe(cfg)); } catch { setMe({ authed: false, user: null }); }
-  }, [cfg]);
+    try {
+      const meRes = await apiMe(cfg);
+      setMe(meRes as MeState);
+      if (meRes.authed) {
+        setStatus("Signed in ✅");
+        onAuthed?.();
+      }
+    } catch {
+      setMe({ authed: false, user: null });
+      setStatus(has ? "Connect your wallet to continue" : "MetaMask not found");
+    }
+  }, [cfg, has, onAuthed]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
@@ -43,19 +63,30 @@ export function MetaMaskAuth() {
       await refresh();
       setNeedsProfile(!!res.isNew);
       setStatus(res.isNew ? "Welcome! Finish profile 👇" : "Signed in ✅");
-    } catch (e: any) { setStatus(e?.message ?? "Failed"); }
-  }, [cfg, refresh]);
+      if (!res.isNew) onAuthed?.();
+    } catch (e: any) {
+      setStatus(e?.message ?? "Failed");
+    }
+  }, [cfg, onAuthed, refresh]);
 
   const save = useCallback(async () => {
-    try { setStatus("Saving..."); await apiSetProfile(cfg, { displayName }); setNeedsProfile(false); await refresh(); setStatus("All set ✅"); }
-    catch (e: any) { setStatus(e?.message ?? "Failed"); }
-  }, [cfg, displayName, refresh]);
+    try {
+      setStatus("Saving...");
+      await apiSetProfile(cfg, { displayName });
+      setNeedsProfile(false);
+      await refresh();
+      setStatus("All set ✅");
+      onAuthed?.();
+    } catch (e: any) {
+      setStatus(e?.message ?? "Failed");
+    }
+  }, [cfg, displayName, onAuthed, refresh]);
 
   return (
     <Card className="grid gap-3">
       <div className="text-xs opacity-80">{status}</div>
-      <Button onClick={connect} disabled={!has}>{has ? "Connect & Sign" : "Install MetaMask"}</Button>
-      {me.authed ? <div className="text-xs opacity-80">Wallet: {String(me.user.walletAddress).slice(0,6)}…{String(me.user.walletAddress).slice(-4)}</div> : null}
+      <Button onClick={connect} disabled={!has}>{has ? "Connect MetaMask" : "Install MetaMask"}</Button>
+      {me.authed && me.user ? <div className="text-xs opacity-80">Wallet: {String(me.user.walletAddress).slice(0, 6)}…{String(me.user.walletAddress).slice(-4)}</div> : null}
       {me.authed && needsProfile ? (
         <div className="grid gap-2">
           <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="display name" />
