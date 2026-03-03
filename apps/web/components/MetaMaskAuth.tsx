@@ -14,11 +14,17 @@ type MeState = { authed: boolean; user: { walletAddress: string } | null };
 
 export function MetaMaskAuth({ onAuthed }: { onAuthed?: () => void }) {
   const cfg = useMemo(() => apiConfig(), []);
-  const has = useMemo(() => typeof window !== "undefined" && !!window.ethereum, []);
-  const [status, setStatus] = useState(has ? "Not connected" : "MetaMask not found");
+  const [has, setHas] = useState(false);
+  const [status, setStatus] = useState("Checking wallet...");
   const [me, setMe] = useState<MeState>({ authed: false, user: null });
   const [needsProfile, setNeedsProfile] = useState(false);
   const [displayName, setDisplayName] = useState("");
+
+  useEffect(() => {
+    const hasWallet = typeof window !== "undefined" && !!window.ethereum;
+    setHas(hasWallet);
+    setStatus(hasWallet ? "Not connected" : "MetaMask not found");
+  }, []);
 
   const refresh = useCallback(async () => {
     try {
@@ -30,9 +36,9 @@ export function MetaMaskAuth({ onAuthed }: { onAuthed?: () => void }) {
       }
     } catch {
       setMe({ authed: false, user: null });
-      setStatus("Connect your wallet to continue");
+      setStatus(has ? "Connect your wallet to continue" : "MetaMask not found");
     }
-  }, [cfg, onAuthed]);
+  }, [cfg, has, onAuthed]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
